@@ -1,13 +1,13 @@
-# Hướng dẫn ghi thẻ NFC (FR-55)
+# Hướng dẫn ghi thẻ NFC mẫu
 
 | Mục | Giá trị |
 |---|---|
-| Phiên bản | v0.3 |
-| Ngày cập nhật | 2026-10-16 |
-| Dành cho | Quản trị làm thẻ, thành viên nhóm làm thẻ test |
-| Dựa trên | Requirement v1.3 (FR-55, A-08), [DEV_LOGS.md](DEV_LOGS.md) |
+| Phiên bản | v0.4 |
+| Ngày cập nhật | 2026-10-17 |
+| Dành cho | Thành viên nhóm chuẩn bị thẻ mẫu cho phát triển và demo |
+| Dựa trên | Requirement v1.6 (FR-04, A-08), [DEV_LOGS.md](DEV_LOGS.md) |
 
-App Moonkage Verify chỉ đọc thẻ, không ghi (AC 55.3). Thẻ được ghi bằng app **NFC Tools** (wakdev) trên Android. Tên nút có thể khác chút tùy phiên bản NFC Tools.
+Theo Requirement A-08, thẻ do người dùng tự có trước, nằm ngoài hệ thống; nền tảng không cấp thẻ. Việc ghi thẻ ở đây chỉ là chuẩn bị thẻ mẫu của nhóm. App Moonkage Verify chỉ đọc thẻ, không ghi. Thẻ được ghi bằng app **NFC Tools** (wakdev) trên Android. Tên nút có thể khác chút tùy phiên bản NFC Tools.
 
 > Thẻ định dạng cũ (`MK1|...`, `MK2|...`) **không còn dùng được**: app sẽ báo "thẻ không đúng loại". Ghi lại theo mục 2.
 
@@ -38,7 +38,7 @@ Một NDEF **Text record** chứa một **JSON object**, viết trên một dòn
 | `place_of_birth` | Nơi sinh | Chuỗi không rỗng | `"Tinh Lam Dong"` |
 | `place_of_residence` | Nơi thường trú | Chuỗi không rỗng | `"So 1 Duong Thu Nghiem, Phuong Sai Gon, TP Lam Dong"` |
 | `date_of_issue` | Ngày cấp | `yyyy-MM-dd`, sau ngày sinh | `"2024-01-01"` |
-| `date_of_expiry` | Có giá trị đến | `yyyy-MM-dd`, sau ngày cấp | `"2030-01-01"` |
+| `date_of_expiry` | Có giá trị đến | `yyyy-MM-dd`, sau ngày cấp; không trước ngày hiện tại, nếu không app và máy chủ từ chối (AC-04.8) | `"2030-01-01"` |
 
 - Đủ 9 khóa, giá trị đều là **chuỗi** (kể cả số CCCD, phải có dấu ngoặc kép).
 - Thứ tự khóa không quan trọng. Khóa thừa bị bỏ qua.
@@ -106,6 +106,7 @@ Tab **OTHER** → **Lock tag** → xác nhận → áp thẻ.
 | E – thiếu trường | Bỏ khóa `place_of_residence` | App báo "Nội dung thẻ không hợp lệ", không gửi |
 | F – thẻ định dạng cũ | `MK1\|000000000001\|Nguyen Van An` | App báo "thẻ không đúng loại", không gửi |
 | G – thẻ URL / thẻ trắng | Record URL, hoặc Erase | App báo "thẻ không đúng loại", không gửi |
+| H – CCCD hết hạn | `date_of_issue` `"2010-01-01"`, `date_of_expiry` `"2020-01-01"` | App báo CCCD đã hết hạn, không gửi (AC-04.8) |
 
 `ID_ALREADY_LINKED`: lưu thẻ A ở tài khoản `demo`, rồi đăng nhập `other` và chạm lại thẻ A (xem DEV_LOGS, mục cách test với mock server).
 
@@ -127,3 +128,4 @@ Thẻ C, D, E không tạo được bằng `make_card` (tool từ chối); sửa
 | v0.1 | 2026-10-16 | Tạo tài liệu: định dạng `MK1`, các bước ghi/đọc/khóa bằng NFC Tools, bộ thẻ test, xử lý sự cố |
 | v0.2 | 2026-10-16 | Định dạng `MK2` 11 trường có ảnh base64; giới hạn ảnh theo loại thẻ; tool `make_card` |
 | v0.3 | 2026-10-16 | Nội dung thẻ là JSON 9 khóa `snake_case`, bỏ ảnh, thay nơi đăng ký khai sinh bằng nơi thường trú, ngày `yyyy-MM-dd`; NTAG215 là đủ; `make_card` nhận thẳng JSON thẻ |
+| v0.4 | 2026-10-17 | Đồng bộ Requirement v1.6: bỏ FR-55 (thẻ do người dùng tự có, việc ghi thẻ chỉ là chuẩn bị thẻ mẫu); quy định ngày hết hạn không trước hôm nay; thêm thẻ test H (CCCD hết hạn) |

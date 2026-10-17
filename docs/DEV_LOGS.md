@@ -366,3 +366,63 @@ Vẫn dùng `camelCase` như các endpoint khác của backend (quyết định 
 | N-03 | Backend làm 3 endpoint; chốt `camelCase` hay `snake_case` cho API |
 | N-04 | Chốt cách máy chủ lưu dữ liệu cá nhân (AC 54.6) |
 | N-06, N-07 | Như mục 8 phía trên |
+
+## 2026-10-17 — Nhóm chốt luồng xác minh NFC; tài liệu nhóm đã cập nhật
+
+**Tài liệu nhóm** (thay mục 5 "Thay đổi so với tài liệu nhóm" và N-02 ở các mục trên)
+
+Luồng mobile đã được đưa lên tài liệu theo chiều Context → User Stories → Requirement v1.6 → Software Design v0.6 → Flutter_App_Plan v0.6. Mã FR, AC theo Requirement v1.6: FR-54 cũ là **FR-04**, AC 54.x cũ là **AC-04.x**, FR-55 đã bỏ (thẻ do người dùng tự có, A-08).
+
+**Quyết định của nhóm** (thay D-1, D-6 ở mục 4 và hợp đồng ở mục 3, nhật ký 2026-10-16)
+
+| Điểm | Đã chốt | Nguồn |
+|---|---|---|
+| Đăng nhập trong app, phiên phải thuộc tài khoản | Giữ (`SESSION_NOT_OWNED`) | AC-04.2 |
+| Nội dung thẻ | Giữ JSON 9 khóa | A-08 |
+| Thứ tự | **Xác nhận trước, gửi sau**: app hiện dữ liệu đọc từ thẻ, người dùng bấm Lưu thì mới gửi một lần. **Máy chủ không lưu tạm** | AC-04.4, Software Design D-20 |
+| Số định danh trên màn xác nhận | Hiện đầy đủ (chỉ trên điện thoại) | AC-04.4, AC-04.12 |
+| Mã hóa khi gửi | Số định danh, ngày sinh, nơi thường trú bọc trong `encryptedFields` (JWE `RSA-OAEP-256` + `A256GCM`) | AC-04.10, Software Design D-17 |
+| Máy chủ lưu | Họ tên, giới tính, ngày sinh, quốc tịch, số định danh; số định danh và ngày sinh mã hóa khi lưu | AC-04.11 |
+| CCCD hết hạn | Chặn; thêm `reasonCode` `CARD_EXPIRED` | AC-04.8 |
+| Tiền tố API, kiểu tên trường | `/identity-service/api/...`, `camelCase` (giữ D-1) | Software Design D-18 |
+
+**Hợp đồng API mới** (thay mục 3.2 → 3.4 phía trên): chỉ còn `POST /identity-service/api/nfc-sessions/{sessionId}/card`, gửi sau khi bấm Lưu. Body `{fullName, sex, nationality, placeOfBirth, dateOfIssue, dateOfExpiry, encryptedFields, appVersion}`; `encryptedFields` bọc `{idNumber, dateOfBirth, placeOfResidence}`. Phản hồi `{status: VERIFIED | REJECTED, reasonCode, attemptsLeft, lockedUntil}`, không chứa dữ liệu thẻ. Bỏ `POST .../confirm`, `DELETE .../card` và trạng thái `PENDING_CONFIRMATION`. Chi tiết: Software Design v0.6 mục 5.1.
+
+**Việc code còn lại** (thay danh sách việc tiếp theo phía trên; README mô tả code hiện tại, sửa khi code xong)
+
+| # | Việc |
+|---|---|
+| N-08 | Đảo luồng: màn xác nhận hiện `IdentityCard` đọc từ thẻ; Lưu mới gọi API; bỏ `confirm`, `DELETE card`, `PendingConfirmation` |
+| N-09 | Mã hóa JWE ở `data/` (đề xuất gói `jose`); khóa công khai và `kid` lấy từ `env/*.json` (`NFC_TRANSPORT_PUBLIC_KEY`, `NFC_TRANSPORT_KEY_ID`) |
+| N-10 | `card_parser.dart` kiểm `date_of_expiry` không trước hôm nay; thêm `CARD_EXPIRED` vào `reason_code.dart` và `strings.dart` |
+| N-11 | Cập nhật `tool/mock_server.dart` theo hợp đồng mới; cập nhật test |
+| N-12 | Cập nhật README mục 3, 4 sau khi code xong |
+| N-01, N-03, N-06, N-07 | Như trước. N-02, N-04 đã xong ở tài liệu nhóm |
+
+## 2026-10-17 — Chuẩn hóa URL API và vai trò
+
+**Quyết định của nhóm** (thay dòng "Tiền tố API, kiểu tên trường" và các đường dẫn ở mục ngay trên)
+
+| Điểm | Đã chốt | Nguồn |
+|---|---|---|
+| Đường dẫn API | Theo tài nguyên: `/api/<tài-nguyên>/...`, **không** tên service, **không** số phiên bản. Gateway định tuyến theo tiền tố | Software Design D-18, mục 5.1 |
+| Tên trường JSON | `camelCase`, enum `UPPER_SNAKE_CASE` (giữ) | Software Design mục 5.1 |
+| Vai trò | Chỉ hai vai `MEMBER`, `ADMIN` (thay `CUSTOMER`) | Software Design D-19 |
+| Mã hóa JWE, một endpoint gửi thẻ | Đã chốt | Software Design D-17, D-20 |
+
+**Endpoint app dùng**
+
+| Cũ | Mới |
+|---|---|
+| `POST /identity-service/api/auth/login` | `POST /api/auth/login` |
+| `POST /identity-service/api/nfc-sessions/{sessionId}/card` | `POST /api/nfc-sessions/{sessionId}/card` |
+
+`API_BASE_URL` vẫn là địa chỉ gateway (ví dụ `http://<IP-LAN>:8080`); chỉ đổi phần đường dẫn.
+
+**Việc code thêm**
+
+| # | Việc |
+|---|---|
+| N-13 | Mobile: đổi đường dẫn trong `auth_api.dart`, API gửi thẻ và `tool/mock_server.dart` sang `/api/...`; cập nhật test |
+| N-14 | Backend (ngoài mobile): gateway chuyển từ định tuyến theo tên service sang bảng tiền tố của Software Design mục 5.1; đổi vai `CUSTOMER` thành `MEMBER`; cập nhật `docs/auth.md` và Postman collection |
+

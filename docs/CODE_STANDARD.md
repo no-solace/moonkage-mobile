@@ -2,10 +2,10 @@
 
 | Mục | Giá trị |
 |---|---|
-| Phiên bản | v0.4 |
-| Ngày cập nhật | 2026-10-16 |
+| Phiên bản | v0.5 |
+| Ngày cập nhật | 2026-10-17 |
 | Áp dụng cho | `mobile/` — app Flutter Moonkage Verify (`edu.fpt.moonkage.mobile`) |
-| Dựa trên | Flutter_App_Plan v0.4, Requirement v1.3 (FR-54, A-08), Software Design v0.4 (5.1) |
+| Dựa trên | Flutter_App_Plan v0.6, Requirement v1.6 (FR-04, A-08, NFR-03), Software Design v0.6 (5.1, D-17) |
 
 Tài liệu này là quy ước viết code cho phần mobile. Code mới phải theo; code cũ được sửa dần khi đụng tới. Khi tài liệu này khác với plan, theo plan rồi cập nhật lại tài liệu này.
 
@@ -103,7 +103,7 @@ Một file một class public chính. File quá ~300 dòng thì tách.
 | DTO API | hậu tố `Request` / `Response` | `SubmitResultRequest` |
 | Test | `<file>_test.dart` | `qr_parser_test.dart` |
 
-Tên trong code viết tiếng Anh. Câu chữ hiển thị cho người dùng viết tiếng Việt, đặt trong `core/strings.dart` (mục 8). Trường JSON giữ nguyên tên của API (backend Spring dùng `camelCase`, xem `docs/auth.md`).
+Tên trong code viết tiếng Anh. Câu chữ hiển thị cho người dùng viết tiếng Việt, đặt trong `core/strings.dart` (mục 8). Trường JSON giữ nguyên tên của API: `camelCase`, enum `UPPER_SNAKE_CASE`. Đường dẫn API theo quy ước `/api/<tài-nguyên>` của Software Design mục 5.1 (D-18); không ghép tên service vào URL.
 
 ---
 
@@ -182,15 +182,17 @@ return Rejected(
 
 ## 7. Bảo mật và dữ liệu thẻ (bắt buộc)
 
-Các điểm dưới đây xuất phát từ FR-54 và nguyên tắc ở plan mục 4.2. Thẻ nay chứa số CCCD, ngày sinh, nơi sinh, nơi thường trú: đây là dữ liệu cá nhân, nên các điểm này càng phải giữ. Vi phạm là chặn merge.
+Các điểm dưới đây xuất phát từ FR-04, NFR-03 và nguyên tắc ở plan mục 4.2. Thẻ nay chứa số CCCD, ngày sinh, nơi sinh, nơi thường trú: đây là dữ liệu cá nhân, nên các điểm này càng phải giữ. Vi phạm là chặn merge.
 
 1. **Không log dữ liệu thẻ và thông tin đăng nhập.** Không in nội dung thẻ, bất kỳ trường nào của thẻ, mật khẩu hay token ra console, crash report hay analytics. `print` đã bị lint chặn; `debugPrint`/`log` cũng không được dùng với các giá trị này. Interceptor log của Dio (nếu có) chỉ bật ở debug và không log body hay header `Authorization`.
 2. **Không lưu dữ liệu thẻ và token trên máy.** Không ghi vào file, `SharedPreferences`, database, cache. Giữ trong bộ nhớ của notifier; thông tin thẻ bị bỏ khi bấm Lưu xong, bấm Hủy, quay về trang chủ hoặc đăng xuất.
-3. **URL máy chủ chỉ lấy từ cấu hình build**, không đọc từ QR, không cho người dùng nhập.
+3. **URL máy chủ và khóa công khai mã hóa chỉ lấy từ cấu hình build**, không đọc từ QR, không cho người dùng nhập.
 4. **Kiểm QR trước khi dùng:** đúng tiền tố `moonkage-verify:v1:` và `session_id` hợp lệ; sai thì báo lỗi, không gọi API.
 5. **App kiểm nội dung thẻ (JSON, NFC_CARD_GUIDE mục 2) trước khi gửi** (`domain/card_parser.dart`) để báo lỗi sớm và không gửi thẻ sai lên máy chủ. Máy chủ **vẫn phải kiểm lại**; không tin kết quả kiểm ở app.
-6. **App không có chức năng ghi thẻ** (AC 55.3): không gọi API ghi NDEF của `nfc_manager`.
+6. **App không có chức năng ghi thẻ** (A-08): không gọi API ghi NDEF của `nfc_manager`.
 7. Chỉ dùng **dữ liệu CCCD mẫu** (A-08) trong test, fixture, ảnh chụp màn hình.
+8. **Chỉ gửi sau khi người dùng bấm Lưu** (AC-04.4). Màn xác nhận hiện dữ liệu đọc từ thẻ; bấm Hủy thì không có request nào chứa dữ liệu thẻ.
+9. **Số định danh, ngày sinh, nơi thường trú chỉ đi lên máy chủ trong `encryptedFields`** (JWE, AC-04.10, Software Design D-17), không bao giờ ở dạng đọc được trong body.
 
 ---
 
@@ -264,3 +266,4 @@ flutter run --dart-define-from-file=env/dev.json
 | v0.2 | 2026-10-16 | Mục 3: thêm `tool/` (mock server) và `env/`. Trạng thái và cách chạy xem `DEV_NOTES.md` |
 | v0.3 | 2026-10-16 | Luồng mới (DEV_NOTES v0.2): thêm `core/auth`, `features/auth`; JSON theo `camelCase` của backend; mục 7 thêm token, mật khẩu, ảnh; app kiểm định dạng `MK2` trước khi gửi, máy chủ kiểm lại |
 | v0.4 | 2026-10-16 | Thẻ đổi sang JSON (NFC_CARD_GUIDE v0.3), bỏ ảnh. `DEV_NOTES.md` đổi tên thành `DEV_LOGS.md` (nhật ký, chỉ ghi thêm) |
+| v0.5 | 2026-10-17 | Đồng bộ Requirement v1.6, Software Design v0.6, Plan v0.6: FR-54 → FR-04, AC 55.3 → A-08; khóa công khai mã hóa lấy từ cấu hình build; thêm quy tắc 8 (chỉ gửi sau khi bấm Lưu) và 9 (trường nhạy cảm chỉ gửi trong JWE). Đường dẫn và tên trường theo Software Design mục 5.1 (D-18) |
