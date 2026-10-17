@@ -13,7 +13,7 @@ Tài liệu này là quy ước viết code cho phần mobile. Code mới phải
 
 ## 1. Các tầng kiểm tra
 
-Giống backend (`backend/docs/t0-t1-automation.md`), hai tầng thấp nhất để máy lo, hai tầng trên do người review.
+Giống backend (`../../api`), hai tầng thấp nhất để máy lo, hai tầng trên do người review.
 
 | Tầng | Nội dung | Công cụ | Lệnh |
 |---|---|---|---|
@@ -32,7 +32,7 @@ flutter test           # phải pass hết
 
 Không tắt rule cho cả project để qua lint. Nếu thật sự cần, dùng `// ignore: <rule>` trên đúng dòng đó, kèm một câu giải thích lý do.
 
-> Hook `pre-commit` và CI hiện chỉ chạy cho `backend/`. Bổ sung job mobile là việc còn mở (mục 10).
+> Hook `pre-commit` và CI hiện chỉ chạy cho `../../api`. Bổ sung job mobile là việc còn mở (mục 10).
 
 ---
 
