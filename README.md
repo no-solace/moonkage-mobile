@@ -1,15 +1,15 @@
 # Moonkage Verify (mobile)
 
-App Flutter cho Android: người dùng đăng nhập tài khoản Moonkage, quét QR phiên trên web, chạm thẻ NFC; máy chủ lưu tạm thông tin thẻ, người dùng kiểm lại rồi bấm **Lưu** để xác minh tài khoản.
+App Flutter cho Android: người dùng đăng nhập tài khoản Moonkage, quét QR phiên trên web, chạm thẻ NFC; người dùng kiểm lại thông tin rồi bấm **Lưu** để xác minh tài khoản.
 
-Package `moonkage_verify`, application id `edu.fpt.moonkage.mobile`. App **chỉ đọc** thẻ, không ghi.
+Package `moonkage_verify`, application id `com.moonkage.mobile`. App **chỉ đọc** thẻ, không ghi.
 
-| Muốn biết | Đọc |
-|---|---|
-| Cấu trúc code, file nào làm gì | README này |
-| Quy ước viết code, quy tắc bảo mật dữ liệu thẻ | [docs/CODE_STANDARD.md](docs/CODE_STANDARD.md) |
+| Muốn biết                                                             | Đọc                                                                 |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Cấu trúc code, file nào làm gì                                        | README này                                                          |
+| Quy ước viết code, quy tắc bảo mật dữ liệu thẻ                        | [docs/CODE_STANDARD.md](docs/CODE_STANDARD.md)                      |
 | Luồng, hợp đồng API, dựng môi trường, lỗi đã gặp, trạng thái hiện tại | [docs/DEV_LOGS.md](docs/DEV_LOGS.md) (nhật ký, chỉ ghi thêm ở cuối) |
-| Nội dung thẻ, cách ghi thẻ NFC | [docs/NFC_CARD_GUIDE.md](docs/NFC_CARD_GUIDE.md) |
+| Nội dung thẻ, cách ghi thẻ NFC                                        | [docs/NFC_CARD_GUIDE.md](docs/NFC_CARD_GUIDE.md)                    |
 
 ---
 
