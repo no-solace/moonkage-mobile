@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moonkage_verify/core/errors/app_failure.dart';
 import 'package:moonkage_verify/core/errors/reason_code.dart';
 import 'package:moonkage_verify/core/network/api_endpoints.dart';
+import 'package:moonkage_verify/core/network/api_payload.dart';
 import 'package:moonkage_verify/core/network/dio_failure.dart';
 import 'package:moonkage_verify/core/network/dio_provider.dart';
 import 'package:moonkage_verify/core/strings.dart';
@@ -23,7 +24,7 @@ class VerifyApi {
   Future<void> checkSession(String sessionId) async {
     try {
       final response = await _dio.get<Object?>(ApiEndpoints.nfcSession(sessionId));
-      final body = response.data;
+      final body = apiPayload(response.data);
       if (body is Map<String, Object?>) {
         final status = body['status'];
         if (status is String) {
@@ -81,10 +82,11 @@ class VerifyApi {
   Future<VerifyOutcome> _post(String path, {Object? data}) async {
     Object? body;
     try {
-      body = (await _dio.post<Object?>(path, data: data)).data;
+      body = apiPayload((await _dio.post<Object?>(path, data: data)).data);
     } on DioException catch (e) {
       // Từ chối nghiệp vụ có thể đi kèm mã 4xx; body vẫn là kết quả (`status` dạng chuỗi).
-      final errorBody = e.response?.data;
+      // Body lỗi chung có `status` là số và `data: null`, nên không bị nhầm là kết quả.
+      final errorBody = apiPayload(e.response?.data);
       final isOutcome = errorBody is Map<String, Object?> && errorBody['status'] is String;
       if (e.type != DioExceptionType.badResponse || !isOutcome || e.response?.statusCode == 401) {
         throw failureFromDio(e);

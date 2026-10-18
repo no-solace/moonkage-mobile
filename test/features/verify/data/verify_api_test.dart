@@ -81,6 +81,51 @@ void main() {
     expect(api.submitCard(sessionId, request), throwsA(isA<InvalidResponseFailure>()));
   });
 
+  group('ApiResponse<T> của identity-service', () {
+    Map<String, Object?> wrapped(Map<String, Object?> data) => {
+      'status': 200,
+      'code': 'SUCCESS',
+      'message': 'OK',
+      'data': data,
+      'timestamp': '2026-10-19T03:00:00Z',
+    };
+
+    test('gửi thẻ: kết quả nằm trong data', () async {
+      adapter.body = wrapped({'status': 'REJECTED', 'reasonCode': 'BAD_FORMAT', 'attemptsLeft': 4});
+
+      final outcome = await api.submitCard(sessionId, request) as Rejected;
+
+      expect(outcome.reason, ReasonCode.badFormat);
+      expect(outcome.attemptsLeft, 4);
+    });
+
+    test('gửi thẻ: VERIFIED trong data', () async {
+      adapter.body = wrapped({'status': 'VERIFIED'});
+      expect(await api.submitCard(sessionId, request), isA<Verified>());
+    });
+
+    test('checkSession: đọc status trong data', () async {
+      adapter.body = wrapped({'sessionId': sessionId, 'status': 'PENDING'});
+      await expectLater(api.checkSession(sessionId), completes);
+    });
+
+    test('lỗi bọc (data: null, status là số) thì ném ServerFailure kèm message', () async {
+      adapter
+        ..statusCode = 403
+        ..body = {
+          'status': 403,
+          'code': 'NFC_002',
+          'message': 'Xác minh NFC đang tạm khóa',
+          'data': null,
+          'path': '/api/nfc-sessions/x/card',
+        };
+      await expectLater(
+        api.submitCard(sessionId, request),
+        throwsA(isA<ServerFailure>().having((f) => f.message, 'message', 'Xác minh NFC đang tạm khóa')),
+      );
+    });
+  });
+
   group('checkSession', () {
     test('phiên ACTIVE thì hoàn thành bình thường', () async {
       adapter.body = {'sessionId': sessionId, 'status': 'ACTIVE'};
