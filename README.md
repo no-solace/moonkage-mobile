@@ -11,19 +11,16 @@
 
 ## Mục lục & Bản đồ Tài liệu
 
-| Tài liệu | Nội dung chính |
-| --- | --- |
-| **[README này](README.md)** | Bức tranh toàn cảnh: Cấu trúc code, luồng nghiệp vụ, cơ chế kỹ thuật và hướng dẫn vận hành |
-| **[docs/00_analysis.md](docs/00_analysis.md)** | **Báo cáo phân tích chuyên sâu:** Tổng hợp hiện trạng, điểm mạnh, điểm yếu và giải pháp của cả 5 luồng hệ thống |
-| **[docs/01_auth_flow_plan.md](docs/01_auth_flow_plan.md)** | Kế hoạch Luồng 1: Đăng nhập, Remember Me (Keystore) & DTO parsing linh hoạt |
-| **[docs/02_qr_flow_plan.md](docs/02_qr_flow_plan.md)** | Kế hoạch Luồng 2: Quét QR đa định dạng, Viewfinder Overlay, Torch & Check Session |
-| **[docs/03_nfc_lifecycle_plan.md](docs/03_nfc_lifecycle_plan.md)** | Kế hoạch Luồng 3: Vòng đời NFC, Cold Start Shield, Re-arm RF Field & Smart Haptics |
-| **[docs/04_confirm_submit_plan.md](docs/04_confirm_submit_plan.md)** | Kế hoạch Luồng 4: Xác nhận, Data Masking (che CCCD), Loading Overlay & Result Screen |
-| **[docs/05_code_cleanup_refactor_plan.md](docs/05_code_cleanup_refactor_plan.md)** | Kế hoạch Luồng 5: Dọn dẹp dead states, chuẩn hóa State Machine và 100% docstrings |
-| **[docs/06_nfc_shield_reinforcement_plan.md](docs/06_nfc_shield_reinforcement_plan.md)** | Kế hoạch Luồng 6: Gia cố Khiên chắn NFC Toàn diện & Triệt tiêu Pop-up Hệ thống Android |
-| **[docs/CODE_STANDARD.md](docs/CODE_STANDARD.md)** | Quy ước viết code, phân tầng Clean Architecture và nguyên tắc bảo mật bất biến |
-| **[docs/DEV_LOGS.md](docs/DEV_LOGS.md)** | Nhật ký phát triển, hợp đồng API, ghi chép lỗi và các ca kiểm thử thủ công |
-| **[docs/NFC_CARD_GUIDE.md](docs/NFC_CARD_GUIDE.md)** | Định dạng dữ liệu thẻ CCCD mẫu và hướng dẫn nạp thẻ NFC bằng NFC Tools |
+| Tài liệu                                                                                 | Nội dung chính                                                                                                  |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| **[README này](README.md)**                                                              | Bức tranh toàn cảnh: Cấu trúc code, luồng nghiệp vụ, cơ chế kỹ thuật và hướng dẫn vận hành                      |
+| **[docs/00_analysis.md](docs/00_analysis.md)**                                           | **Báo cáo phân tích chuyên sâu:** Tổng hợp hiện trạng, điểm mạnh, điểm yếu và giải pháp của cả 5 luồng hệ thống |
+| **[docs/01_auth_flow_plan.md](docs/01_auth_flow_plan.md)**                               | Kế hoạch Luồng 1: Đăng nhập, Remember Me (Keystore) & DTO parsing linh hoạt                                     |
+| **[docs/02_qr_flow_plan.md](docs/02_qr_flow_plan.md)**                                   | Kế hoạch Luồng 2: Quét QR đa định dạng, Viewfinder Overlay, Torch & Check Session                               |
+| **[docs/03_nfc_lifecycle_plan.md](docs/03_nfc_lifecycle_plan.md)**                       | Kế hoạch Luồng 3: Vòng đời NFC, Cold Start Shield, Re-arm RF Field & Smart Haptics                              |
+| **[docs/04_confirm_submit_plan.md](docs/04_confirm_submit_plan.md)**                     | Kế hoạch Luồng 4: Xác nhận, Data Masking (che CCCD), Loading Overlay & Result Screen                            |
+| **[docs/05_code_cleanup_refactor_plan.md](docs/05_code_cleanup_refactor_plan.md)**       | Kế hoạch Luồng 5: Dọn dẹp dead states, chuẩn hóa State Machine và 100% docstrings                               |
+| **[docs/06_nfc_shield_reinforcement_plan.md](docs/06_nfc_shield_reinforcement_plan.md)** | Kế hoạch Luồng 6: Gia cố Khiên chắn NFC Toàn diện & Triệt tiêu Pop-up Hệ thống Android                          |
 
 ---
 
