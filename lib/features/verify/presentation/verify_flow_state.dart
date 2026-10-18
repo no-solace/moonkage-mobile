@@ -26,13 +26,8 @@ final class ReadingCard extends VerifyFlowState {
   final String sessionId;
 }
 
-final class Submitting extends VerifyFlowState {
-  const Submitting({required this.sessionId});
-
-  final String sessionId;
-}
-
-/// Máy chủ đã lưu tạm [card]; hiển thị chỉ đọc để người dùng bấm Lưu hoặc Hủy.
+/// Thông tin thẻ đã giải mã trong RAM; hiển thị chỉ đọc tại máy để người dùng kiểm tra
+/// trước khi bấm Lưu (mã hóa JWE gửi máy chủ) hoặc Hủy (xóa RAM) theo Software Design D-20.
 final class AwaitingConfirmation extends VerifyFlowState {
   const AwaitingConfirmation({
     required this.sessionId,

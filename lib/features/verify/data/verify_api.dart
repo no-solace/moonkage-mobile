@@ -1,8 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moonkage_verify/core/errors/app_failure.dart';
+import 'package:moonkage_verify/core/errors/reason_code.dart';
+import 'package:moonkage_verify/core/network/api_endpoints.dart';
 import 'package:moonkage_verify/core/network/dio_failure.dart';
 import 'package:moonkage_verify/core/network/dio_provider.dart';
+import 'package:moonkage_verify/core/strings.dart';
 import 'package:moonkage_verify/features/verify/data/session_result_response.dart';
 import 'package:moonkage_verify/features/verify/data/submit_card_request.dart';
 import 'package:moonkage_verify/features/verify/domain/verify_outcome.dart';
@@ -15,25 +18,64 @@ class VerifyApi {
 
   final Dio _dio;
 
-  static String _sessionPath(String sessionId) =>
-      '/identity-service/api/nfc-sessions/${Uri.encodeComponent(sessionId)}';
-
-  /// Gửi thông tin thẻ để máy chủ lưu tạm. Trả về [PendingConfirmation] hoặc [Rejected].
-  Future<VerifyOutcome> submitCard(String sessionId, SubmitCardRequest request) =>
-      _post('${_sessionPath(sessionId)}/card', data: request.toJson());
-
-  /// Người dùng bấm Lưu: máy chủ ghi thông tin đã lưu tạm vào tài khoản.
-  /// Trả về [Verified] hoặc [Rejected].
-  Future<VerifyOutcome> confirm(String sessionId) => _post('${_sessionPath(sessionId)}/confirm');
-
-  /// Người dùng bấm Hủy: máy chủ xóa thông tin đã lưu tạm.
-  Future<void> discard(String sessionId) async {
+  /// Kiểm tra trạng thái phiên xác minh trước khi bước vào màn Chạm thẻ.
+  /// Ném [AppFailure] nếu phiên hết hạn, thuộc tài khoản khác hoặc lỗi mạng.
+  Future<void> checkSession(String sessionId) async {
     try {
-      await _dio.delete<void>('${_sessionPath(sessionId)}/card');
+      final response = await _dio.get<Object?>(ApiEndpoints.nfcSession(sessionId));
+      final body = response.data;
+      if (body is Map<String, Object?>) {
+        final status = body['status'];
+        if (status is String) {
+          final s = status.toUpperCase();
+          if (s == 'EXPIRED' || s == 'SESSION_EXPIRED') {
+            throw ServerFailure(
+              statusCode: 410,
+              message: Strings.reason(ReasonCode.sessionExpired),
+            );
+          }
+          if (s == 'USED' || s == 'SESSION_USED') {
+            throw ServerFailure(
+              statusCode: 409,
+              message: Strings.reason(ReasonCode.sessionUsed),
+            );
+          }
+          if (s == 'SESSION_NOT_OWNED') {
+            throw ServerFailure(
+              statusCode: 403,
+              message: Strings.reason(ReasonCode.sessionNotOwned),
+            );
+          }
+        }
+      }
     } on DioException catch (e) {
+      final code = e.response?.statusCode;
+      if (code == 404 || code == 410) {
+        throw ServerFailure(
+          statusCode: 410,
+          message: Strings.reason(ReasonCode.sessionExpired),
+        );
+      }
+      if (code == 403) {
+        throw ServerFailure(
+          statusCode: 403,
+          message: Strings.reason(ReasonCode.sessionNotOwned),
+        );
+      }
+      if (code == 409) {
+        throw ServerFailure(
+          statusCode: 409,
+          message: Strings.reason(ReasonCode.sessionUsed),
+        );
+      }
       throw failureFromDio(e);
     }
   }
+
+  /// Gửi thông tin thẻ kèm encryptedFields một lần sau khi người dùng xác nhận (Software Design D-20).
+  /// Trả về [Verified] hoặc [Rejected].
+  Future<VerifyOutcome> submitCard(String sessionId, SubmitCardRequest request) =>
+      _post(ApiEndpoints.nfcSessionCard(sessionId), data: request.toJson());
 
   /// Ném [AppFailure] khi không có kết quả (mạng, timeout, 401, máy chủ lỗi, phản hồi sai dạng).
   Future<VerifyOutcome> _post(String path, {Object? data}) async {

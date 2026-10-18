@@ -18,6 +18,7 @@ abstract final class Strings {
   static const passwordLabel = 'Mật khẩu';
   static const login = 'Đăng nhập';
   static const logout = 'Đăng xuất';
+  static const rememberMe = 'Ghi nhớ đăng nhập';
   static const requiredField = 'Vui lòng nhập thông tin này.';
   static const invalidCredentials = 'Thông tin đăng nhập không đúng.';
 
@@ -33,14 +34,22 @@ abstract final class Strings {
   static const scanQrTitle = 'Quét mã QR';
   static const scanQrHint = 'Quét mã QR hiển thị trên trang web Moonkage.';
   static const invalidQr = 'Mã QR không phải mã xác minh Moonkage.';
+  static const checkingSession = 'Đang kiểm tra phiên xác minh…';
+  static const cameraPermissionDenied =
+      'Ứng dụng cần quyền Camera để quét mã QR. Vui lòng cấp quyền trong Cài đặt.';
+  static const cameraError = 'Không thể khởi động camera. Vui lòng thử lại.';
+  static const flashOn = 'Bật đèn flash';
+  static const flashOff = 'Tắt đèn flash';
 
   // Chạm thẻ
   static const tapCardTitle = 'Chạm thẻ';
   static const tapCardHint = 'Áp thẻ Moonkage vào mặt sau điện thoại và giữ yên.';
+  static const tapCardSubHint = 'Nếu đã áp thẻ sẵn, vui lòng nhấc thẻ ra và chạm lại vào lưng máy.';
+  static const tapCardPositionHint = 'Áp thẻ vào nửa trên mặt lưng máy (gần cụm camera).';
+  static const cardReading = 'Đang đọc thông tin thẻ, vui lòng giữ yên…';
   static const wrongCard = 'Thẻ không đúng loại. Vui lòng chạm thẻ Moonkage.';
   static const cardBadFormat = 'Nội dung thẻ không hợp lệ. Liên hệ quản trị để ghi lại thẻ.';
   static const cardReadFailed = 'Không đọc được thẻ. Giữ yên thẻ và chạm lại.';
-  static const submitting = 'Đang gửi…';
 
   // Xác nhận
   static const confirmTitle = 'Xác nhận thông tin';
@@ -48,6 +57,8 @@ abstract final class Strings {
   static const save = 'Lưu';
   static const saving = 'Đang lưu…';
   static const fieldIdNumber = 'Số CCCD';
+  static const showIdNumber = 'Hiện số CCCD';
+  static const hideIdNumber = 'Ẩn số CCCD';
   static const fieldFullName = 'Họ và tên';
   static const fieldDateOfBirth = 'Ngày sinh';
   static const fieldSex = 'Giới tính';
@@ -81,6 +92,7 @@ abstract final class Strings {
       'Mã QR thuộc tài khoản khác. Đăng nhập app bằng tài khoản đang mở trên web.',
     ReasonCode.locked => 'Tài khoản đang tạm khóa xác minh do thử sai nhiều lần.',
     ReasonCode.badFormat => 'Nội dung thẻ không hợp lệ.',
+    ReasonCode.cardExpired => 'Thẻ CCCD đã hết hạn sử dụng.',
     ReasonCode.idAlreadyLinked => 'Số CCCD trên thẻ đã gắn với tài khoản khác.',
     ReasonCode.unknown => 'Máy chủ từ chối xác minh.',
   };

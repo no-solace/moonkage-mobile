@@ -6,7 +6,7 @@ sealed class VerifyOutcome {
   const VerifyOutcome();
 }
 
-/// Máy chủ đã lưu tạm [card], chờ người dùng bấm Lưu trước [expiresAt].
+/// [Legacy] Máy chủ đã lưu tạm [card] (thiết kế 2-step cũ). Giữ lại để tương thích ngược.
 final class PendingConfirmation extends VerifyOutcome {
   const PendingConfirmation({required this.card, this.expiresAt});
 

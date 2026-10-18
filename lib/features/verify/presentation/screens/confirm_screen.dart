@@ -9,7 +9,7 @@ import 'package:moonkage_verify/features/verify/presentation/verify_flow_state.d
 import 'package:moonkage_verify/features/verify/presentation/widgets/card_details.dart';
 import 'package:moonkage_verify/router.dart';
 
-/// Hiển thị chỉ đọc thông tin máy chủ đã lưu tạm; người dùng bấm Lưu hoặc Hủy.
+/// Hiển thị chỉ đọc thông tin đọc từ thẻ tại máy; người dùng bấm Lưu (mã hóa và gửi) hoặc Hủy.
 class ConfirmScreen extends ConsumerWidget {
   const ConfirmScreen({super.key});
 
@@ -38,19 +38,75 @@ class ConfirmScreen extends ConsumerWidget {
       },
       child: Scaffold(
         appBar: AppBar(title: const Text(Strings.confirmTitle), automaticallyImplyLeading: false),
-        body: ListView(
-          padding: const EdgeInsets.all(24),
+        body: Stack(
           children: [
-            const Text(Strings.confirmHint),
-            const SizedBox(height: 16),
-            CardDetails(card: state.card),
-            if (failure != null) ...[
-              const SizedBox(height: 16),
-              Text(
-                Strings.failure(failure),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
+                Text(
+                  Strings.confirmHint,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                CardDetails(card: state.card),
+                if (failure != null) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            Strings.failure(failure),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            if (state.saving)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  child: Center(
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 16),
+                            Text(
+                              Strings.saving,
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ],
           ],
         ),
         bottomNavigationBar: SafeArea(

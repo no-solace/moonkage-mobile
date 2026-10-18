@@ -9,6 +9,7 @@ enum ReasonCode {
   sessionNotOwned('SESSION_NOT_OWNED'),
   locked('LOCKED'),
   badFormat('BAD_FORMAT'),
+  cardExpired('CARD_EXPIRED'),
   idAlreadyLinked('ID_ALREADY_LINKED'),
 
   /// Mã máy chủ mới thêm mà app chưa biết, hoặc thiếu mã.

@@ -29,6 +29,10 @@ dependencies:
 
   # Lấy app_version cho body gửi kết quả
   package_info_plus: ^10.2.2
+  jose: ^0.3.5+2
+
+  # Lưu trữ phiên an toàn (Remember Me)
+  flutter_secure_storage: ^11.2.0
 
 dev_dependencies:
   flutter_test:

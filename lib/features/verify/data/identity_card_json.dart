@@ -6,7 +6,7 @@ abstract final class IdentityCardJson {
   static Map<String, Object?> toJson(IdentityCard card) => {
     'idNumber': card.idNumber,
     'fullName': card.fullName,
-    'dateOfBirth': _formatDate(card.dateOfBirth),
+    'dateOfBirth': formatDate(card.dateOfBirth),
     'sex': switch (card.sex) {
       Sex.male => 'MALE',
       Sex.female => 'FEMALE',
@@ -14,8 +14,8 @@ abstract final class IdentityCardJson {
     'nationality': card.nationality,
     'placeOfBirth': card.placeOfBirth,
     'placeOfResidence': card.placeOfResidence,
-    'dateOfIssue': _formatDate(card.dateOfIssue),
-    'dateOfExpiry': _formatDate(card.dateOfExpiry),
+    'dateOfIssue': formatDate(card.dateOfIssue),
+    'dateOfExpiry': formatDate(card.dateOfExpiry),
   };
 
   /// Ném [TypeError] hoặc [FormatException] khi JSON sai dạng.
@@ -35,7 +35,7 @@ abstract final class IdentityCardJson {
     dateOfExpiry: _parseDate(json['dateOfExpiry']! as String),
   );
 
-  static String _formatDate(DateTime d) =>
+  static String formatDate(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-'
       '${d.day.toString().padLeft(2, '0')}';
 

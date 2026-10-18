@@ -17,7 +17,11 @@ class LoginNotifier extends Notifier<LoginState> {
   @override
   LoginState build() => const LoginState();
 
-  Future<void> login({required String username, required String password}) async {
+  Future<void> login({
+    required String username,
+    required String password,
+    bool rememberMe = true,
+  }) async {
     if (state.submitting) return;
     state = const LoginState(submitting: true);
     try {
@@ -25,11 +29,17 @@ class LoginNotifier extends Notifier<LoginState> {
           .read(authApiProvider)
           .login(username: username.trim(), password: password);
       if (!ref.mounted) return;
-      ref.read(sessionProvider.notifier).signIn(session);
+      ref.read(sessionProvider.notifier).signIn(session, rememberMe: rememberMe);
       state = const LoginState();
     } on AppFailure catch (failure) {
       if (!ref.mounted) return;
       state = LoginState(failure: failure);
+    }
+  }
+
+  void clearError() {
+    if (state.failure != null) {
+      state = const LoginState();
     }
   }
 }

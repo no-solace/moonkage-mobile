@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moonkage_verify/core/errors/app_failure.dart';
 import 'package:moonkage_verify/core/errors/reason_code.dart';
-import 'package:moonkage_verify/features/verify/data/identity_card_json.dart';
+import 'package:moonkage_verify/core/network/api_endpoints.dart';
 import 'package:moonkage_verify/features/verify/data/submit_card_request.dart';
 import 'package:moonkage_verify/features/verify/data/verify_api.dart';
 import 'package:moonkage_verify/features/verify/domain/verify_outcome.dart';
@@ -20,31 +20,32 @@ void main() {
     api = VerifyApi(Dio(BaseOptions(baseUrl: 'http://mock'))..httpClientAdapter = adapter);
   });
 
-  final request = SubmitCardRequest(card: sampleCard, appVersion: '1.0.0+1');
+  final request = SubmitCardRequest(
+    card: sampleCard,
+    encryptedFields: 'mock.jwe.token',
+    appVersion: '1.0.0+1',
+  );
 
-  test('JSON gửi máy chủ dùng camelCase, ngày yyyy-MM-dd', () {
+  test('JSON gửi máy chủ bọc 3 trường nhạy cảm trong encryptedFields (D-17)', () {
     final json = request.toJson();
-    expect(json['idNumber'], '000000000001');
-    expect(json['dateOfBirth'], '1990-01-01');
+    expect(json['idNumber'], isNull);
+    expect(json['dateOfBirth'], isNull);
+    expect(json['placeOfResidence'], isNull);
+    expect(json['encryptedFields'], 'mock.jwe.token');
+    expect(json['fullName'], 'NGUYEN VAN AN');
     expect(json['sex'], 'MALE');
-    expect(json['placeOfResidence'], startsWith('So 1'));
+    expect(json['dateOfIssue'], '2024-01-01');
+    expect(json['dateOfExpiry'], '2030-01-01');
     expect(json['appVersion'], '1.0.0+1');
   });
 
-  test('gửi thẻ: PENDING_CONFIRMATION trả về thông tin máy chủ đã lưu tạm', () async {
-    adapter.body = {
-      'status': 'PENDING_CONFIRMATION',
-      'card': IdentityCardJson.toJson(sampleCard),
-      'expiresAt': '2026-10-16T08:15:00Z',
-    };
+  test('gửi thẻ thành công trả về VERIFIED trực tiếp (D-20)', () async {
+    adapter.body = {'status': 'VERIFIED'};
 
     final outcome = await api.submitCard(sessionId, request);
 
-    expect(adapter.lastRequest?.path, '/identity-service/api/nfc-sessions/$sessionId/card');
-    final pending = outcome as PendingConfirmation;
-    expect(pending.card.fullName, 'NGUYEN VAN AN');
-    expect(pending.card.placeOfResidence, startsWith('So 1'));
-    expect(pending.expiresAt, DateTime.utc(2026, 10, 16, 8, 15));
+    expect(adapter.lastRequest?.path, ApiEndpoints.nfcSessionCard(sessionId));
+    expect(outcome, isA<Verified>());
   });
 
   test('từ chối kèm mã 4xx vẫn đọc được reasonCode', () async {
@@ -58,17 +59,11 @@ void main() {
     expect(outcome.attemptsLeft, 3);
   });
 
-  test('xác nhận: VERIFIED', () async {
-    adapter.body = {'status': 'VERIFIED'};
-    expect(await api.confirm(sessionId), isA<Verified>());
-    expect(adapter.lastRequest?.path, '/identity-service/api/nfc-sessions/$sessionId/confirm');
-  });
-
   test('401 thì ném UnauthorizedFailure', () async {
     adapter
       ..statusCode = 401
       ..body = {'status': 401, 'error': 'Unauthorized', 'message': 'Token hết hạn'};
-    expect(api.confirm(sessionId), throwsA(isA<UnauthorizedFailure>()));
+    expect(api.submitCard(sessionId, request), throwsA(isA<UnauthorizedFailure>()));
   });
 
   test('lỗi chung của backend thì ném ServerFailure kèm message', () async {
@@ -76,20 +71,44 @@ void main() {
       ..statusCode = 400
       ..body = {'status': 400, 'error': 'Bad Request', 'message': 'Phiên không tồn tại'};
     await expectLater(
-      api.confirm(sessionId),
+      api.submitCard(sessionId, request),
       throwsA(isA<ServerFailure>().having((f) => f.message, 'message', 'Phiên không tồn tại')),
     );
   });
 
   test('phản hồi sai dạng thì ném InvalidResponseFailure', () async {
-    adapter.body = {'status': 'PENDING_CONFIRMATION'};
+    adapter.body = {'status': 'UNKNOWN_STATUS'};
     expect(api.submitCard(sessionId, request), throwsA(isA<InvalidResponseFailure>()));
   });
 
-  test('hủy gọi DELETE .../card', () async {
-    adapter.statusCode = 204;
-    await api.discard(sessionId);
-    expect(adapter.lastRequest?.method, 'DELETE');
-    expect(adapter.lastRequest?.path, '/identity-service/api/nfc-sessions/$sessionId/card');
+  group('checkSession', () {
+    test('phiên ACTIVE thì hoàn thành bình thường', () async {
+      adapter.body = {'sessionId': sessionId, 'status': 'ACTIVE'};
+      await expectLater(api.checkSession(sessionId), completes);
+    });
+
+    test('404 hoặc 410 ném ServerFailure(410)', () async {
+      adapter.statusCode = 404;
+      await expectLater(
+        api.checkSession(sessionId),
+        throwsA(isA<ServerFailure>().having((f) => f.statusCode, 'statusCode', 410)),
+      );
+    });
+
+    test('403 ném ServerFailure(403)', () async {
+      adapter.statusCode = 403;
+      await expectLater(
+        api.checkSession(sessionId),
+        throwsA(isA<ServerFailure>().having((f) => f.statusCode, 'statusCode', 403)),
+      );
+    });
+
+    test('body trả về EXPIRED ném ServerFailure(410)', () async {
+      adapter.body = {'sessionId': sessionId, 'status': 'EXPIRED'};
+      await expectLater(
+        api.checkSession(sessionId),
+        throwsA(isA<ServerFailure>().having((f) => f.statusCode, 'statusCode', 410)),
+      );
+    });
   });
 }

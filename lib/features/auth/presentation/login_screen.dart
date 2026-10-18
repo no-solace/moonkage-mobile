@@ -18,18 +18,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _username = TextEditingController();
   final _password = TextEditingController();
+  bool _obscurePassword = true;
+  bool _rememberMe = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _username.addListener(_onTextChanged);
+    _password.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    ref.read(loginProvider.notifier).clearError();
+  }
 
   @override
   void dispose() {
+    _username.removeListener(_onTextChanged);
+    _password.removeListener(_onTextChanged);
     _username.dispose();
     _password.dispose();
     super.dispose();
   }
 
   void _submit() {
+    FocusScope.of(context).unfocus();
     if (!(_formKey.currentState?.validate() ?? false)) return;
     unawaited(
-      ref.read(loginProvider.notifier).login(username: _username.text, password: _password.text),
+      ref
+          .read(loginProvider.notifier)
+          .login(
+            username: _username.text,
+            password: _password.text,
+            rememberMe: _rememberMe,
+          ),
     );
   }
 
@@ -52,6 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               TextFormField(
                 controller: _username,
+                enabled: !state.submitting,
                 decoration: const InputDecoration(labelText: Strings.usernameLabel),
                 keyboardType: TextInputType.emailAddress,
                 autocorrect: false,
@@ -61,11 +84,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _password,
-                decoration: const InputDecoration(labelText: Strings.passwordLabel),
-                obscureText: true,
+                enabled: !state.submitting,
+                decoration: InputDecoration(
+                  labelText: Strings.passwordLabel,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    ),
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    tooltip: _obscurePassword ? 'Hiện mật khẩu' : 'Ẩn mật khẩu',
+                  ),
+                ),
+                obscureText: _obscurePassword,
                 textInputAction: TextInputAction.done,
                 onFieldSubmitted: (_) => _submit(),
                 validator: _required,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: Checkbox(
+                      value: _rememberMe,
+                      onChanged: state.submitting
+                          ? null
+                          : (value) => setState(() => _rememberMe = value ?? true),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: state.submitting
+                        ? null
+                        : () => setState(() => _rememberMe = !_rememberMe),
+                    child: const Text(Strings.rememberMe),
+                  ),
+                ],
               ),
               if (failure != null) ...[
                 const SizedBox(height: 16),

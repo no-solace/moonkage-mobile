@@ -17,11 +17,15 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:jose/jose.dart';
+import 'package:moonkage_verify/core/network/api_endpoints.dart';
+import 'package:moonkage_verify/features/verify/data/demo_nfc_key.dart';
+
 const _port = 8090;
 const _maxAttempts = 5;
 const _sessionTtl = Duration(minutes: 5);
 const _lockDuration = Duration(minutes: 15);
-const _api = '/identity-service/api';
+const _api = ApiEndpoints.identityService;
 
 final _sessionPath = RegExp('^$_api/nfc-sessions/([A-Za-z0-9_-]+)/(card|confirm)\$');
 final _random = Random.secure();
@@ -88,7 +92,34 @@ Future<void> _handle(HttpRequest request) async {
       ..headers.set(HttpHeaders.locationHeader, '/');
     return request.response.close();
   }
-  if (method == 'POST' && path == '$_api/auth/login') return _login(request);
+  if (method == 'POST' && path == ApiEndpoints.login) return _login(request);
+
+  final getSessionMatch = RegExp('^$_api/nfc-sessions/([A-Za-z0-9_-]+)\$').firstMatch(path);
+  if (method == 'GET' && getSessionMatch != null) {
+    final user = _authenticate(request);
+    if (user == null) return _error(request, HttpStatus.unauthorized, 'Token thiếu hoặc hết hạn');
+    final sessionId = getSessionMatch.group(1)!;
+    final session = _sessions[sessionId];
+    if (session == null || DateTime.now().isAfter(session.expiresAt)) {
+      return _error(request, HttpStatus.gone, 'Phiên không tồn tại hoặc đã hết hạn');
+    }
+    if (session.owner.accountId != user.accountId) {
+      return _error(request, HttpStatus.forbidden, 'Phiên thuộc tài khoản khác');
+    }
+    if (session.used) {
+      return _error(request, HttpStatus.conflict, 'Phiên đã sử dụng');
+    }
+    return _send(
+      request,
+      HttpStatus.ok,
+      ContentType.json,
+      jsonEncode({
+        'sessionId': sessionId,
+        'status': 'ACTIVE',
+        'expiresAt': session.expiresAt.toIso8601String(),
+      }),
+    );
+  }
 
   final match = _sessionPath.firstMatch(path);
   if (match == null) return _error(request, HttpStatus.notFound, 'Không tìm thấy đường dẫn');
@@ -98,24 +129,13 @@ Future<void> _handle(HttpRequest request) async {
   final sessionId = match.group(1)!;
   final action = '$method ${match.group(2)}';
 
-  final Map<String, Object?>? result;
-  switch (action) {
-    case 'POST card':
-      result = _submitCard(user, sessionId, await _readJson(request));
-    case 'POST confirm':
-      result = _confirm(user, sessionId);
-    case 'DELETE card':
-      final session = _sessions[sessionId];
-      if (session != null && session.owner == user) session.pendingCard = null;
-      _log(sessionId, 'xóa bản lưu tạm');
-      request.response.statusCode = HttpStatus.noContent;
-      return request.response.close();
-    default:
-      return _error(request, HttpStatus.methodNotAllowed, 'Không hỗ trợ $method');
+  if (action == 'POST confirm' || action == 'DELETE card') {
+    return _error(request, HttpStatus.gone, 'Endpoint $action đã bỏ theo Software Design D-20');
   }
-  if (result == null) {
-    return _error(request, HttpStatus.badRequest, 'Chưa có thông tin thẻ để lưu');
+  if (action != 'POST card') {
+    return _error(request, HttpStatus.methodNotAllowed, 'Không hỗ trợ $method');
   }
+  final result = await _submitCard(user, sessionId, await _readJson(request));
   _log(sessionId, '${match.group(2)} → ${result['status']} ${result['reasonCode'] ?? ''}');
   return _send(request, HttpStatus.ok, ContentType.json, jsonEncode(result));
 }
@@ -168,36 +188,47 @@ Map<String, Object?>? _checkSession(_User user, _Session? session) {
   return null;
 }
 
-Map<String, Object?> _submitCard(_User user, String sessionId, Map<String, Object?>? body) {
+Future<Map<String, Object?>> _submitCard(
+  _User user,
+  String sessionId,
+  Map<String, Object?>? body,
+) async {
   final session = _sessions[sessionId];
   final rejected = _checkSession(user, session);
   if (rejected != null) return rejected;
+  if (body == null) return _failAttempt(user, 'BAD_FORMAT');
 
-  final card = body == null ? null : _validCard(body);
+  final mergedBody = Map<String, Object?>.from(body);
+  final encryptedFields = body['encryptedFields'];
+  if (encryptedFields is String && encryptedFields.isNotEmpty) {
+    try {
+      final jwe = JsonWebEncryption.fromCompactSerialization(encryptedFields);
+      final store = JsonWebKeyStore()..addKey(JsonWebKey.fromJson(demoPrivateKeyJwk));
+      final payload = await jwe.getPayload(store);
+      final decrypted = payload.jsonContent;
+      if (decrypted is Map<String, Object?>) {
+        mergedBody.addAll(decrypted);
+      } else {
+        return _failAttempt(user, 'BAD_FORMAT');
+      }
+    } on Exception catch (_) {
+      return _failAttempt(user, 'BAD_FORMAT');
+    }
+  }
+
+  final card = _validCard(mergedBody);
   if (card == null) return _failAttempt(user, 'BAD_FORMAT');
-  final linkedTo = _linkedIds[card['idNumber']];
-  if (linkedTo != null && linkedTo != user) return _failAttempt(user, 'ID_ALREADY_LINKED');
 
-  session!.pendingCard = card;
-  return {
-    'status': 'PENDING_CONFIRMATION',
-    'card': card,
-    'expiresAt': session.expiresAt.toUtc().toIso8601String(),
-  };
-}
-
-Map<String, Object?>? _confirm(_User user, String sessionId) {
-  final session = _sessions[sessionId];
-  final rejected = _checkSession(user, session);
-  if (rejected != null) return rejected;
-  final card = session!.pendingCard;
-  if (card == null) return null;
+  final expiry = DateTime.parse(card['dateOfExpiry']! as String);
+  if (!expiry.isAfter(DateTime.now())) {
+    return _failAttempt(user, 'CARD_EXPIRED');
+  }
 
   final idNumber = card['idNumber']! as String;
   final linkedTo = _linkedIds[idNumber];
   if (linkedTo != null && linkedTo != user) return _failAttempt(user, 'ID_ALREADY_LINKED');
 
-  session
+  session!
     ..used = true
     ..pendingCard = null;
   _linkedIds[idNumber] = user;
