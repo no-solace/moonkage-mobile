@@ -5,7 +5,7 @@ import 'package:moonkage_verify/features/verify/data/demo_nfc_key.dart';
 
 void main() {
   test('JweCardEncryptor mã hóa JWE compact (RSA-OAEP-256 + A256GCM) và giải mã được', () async {
-    final encryptor = JweCardEncryptor();
+    final encryptor = JweCardEncryptor(publicKey: '', useDemoKey: true);
 
     final compact = await encryptor.encryptFields(
       idNumber: '000000000001',
@@ -25,5 +25,18 @@ void main() {
     expect(map['idNumber'], '000000000001');
     expect(map['dateOfBirth'], '1990-01-01');
     expect(map['placeOfResidence'], 'Tinh Lam Dong');
+  });
+
+  test('thiếu khóa công khai và không bật khóa demo thì báo lỗi, không mã hóa bằng khóa demo', () {
+    final encryptor = JweCardEncryptor(publicKey: '', useDemoKey: false);
+
+    expect(
+      () => encryptor.encryptFields(
+        idNumber: '000000000001',
+        dateOfBirth: '1990-01-01',
+        placeOfResidence: 'Tinh Lam Dong',
+      ),
+      throwsStateError,
+    );
   });
 }

@@ -117,19 +117,29 @@ void main() {
           'code': 'NFC_002',
           'message': 'Xác minh NFC đang tạm khóa',
           'data': null,
-          'path': '/api/nfc-sessions/x/card',
+          'path': '/api/nfc/sessions/x/card',
         };
       await expectLater(
         api.submitCard(sessionId, request),
-        throwsA(isA<ServerFailure>().having((f) => f.message, 'message', 'Xác minh NFC đang tạm khóa')),
+        throwsA(
+          isA<ServerFailure>().having((f) => f.message, 'message', 'Xác minh NFC đang tạm khóa'),
+        ),
       );
     });
   });
 
   group('checkSession', () {
-    test('phiên ACTIVE thì hoàn thành bình thường', () async {
-      adapter.body = {'sessionId': sessionId, 'status': 'ACTIVE'};
+    test('phiên PENDING thì hoàn thành bình thường', () async {
+      adapter.body = {'sessionId': sessionId, 'status': 'PENDING'};
       await expectLater(api.checkSession(sessionId), completes);
+    });
+
+    test('phiên VERIFIED (đã dùng) ném ServerFailure(409)', () async {
+      adapter.body = {'sessionId': sessionId, 'status': 'VERIFIED'};
+      await expectLater(
+        api.checkSession(sessionId),
+        throwsA(isA<ServerFailure>().having((f) => f.statusCode, 'statusCode', 409)),
+      );
     });
 
     test('404 hoặc 410 ném ServerFailure(410)', () async {

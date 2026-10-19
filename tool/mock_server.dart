@@ -7,9 +7,8 @@
 //
 // Giả lập (trạng thái giữ trong bộ nhớ, mất khi tắt):
 // - POST /identity-service/api/auth/login              → LoginResponse (docs/auth.md)
-// - POST /identity-service/api/nfc-sessions/{id}/card    → lưu tạm, PENDING_CONFIRMATION
-// - POST /identity-service/api/nfc-sessions/{id}/confirm → ghi vào tài khoản, VERIFIED
-// - DELETE /identity-service/api/nfc-sessions/{id}/card  → xóa bản lưu tạm
+// - GET  /identity-service/api/nfc/sessions/{id}         → {sessionId, status: PENDING|VERIFIED, expiresAt}
+// - POST /identity-service/api/nfc/sessions/{id}/card    → VERIFIED hoặc REJECTED (gửi một lần, D-20)
 // Từ chối: SESSION_EXPIRED (quá 5 phút), SESSION_USED, SESSION_NOT_OWNED, LOCKED,
 // BAD_FORMAT và ID_ALREADY_LINKED (tính một lần thử; 5 lần → khóa 15 phút).
 // Không in nội dung thẻ ra console.
@@ -27,7 +26,7 @@ const _sessionTtl = Duration(minutes: 5);
 const _lockDuration = Duration(minutes: 15);
 const _api = ApiEndpoints.identityService;
 
-final _sessionPath = RegExp('^$_api/nfc-sessions/([A-Za-z0-9_-]+)/(card|confirm)\$');
+final _sessionPath = RegExp('^$_api/nfc/sessions/([A-Za-z0-9_-]+)/card\$');
 final _random = Random.secure();
 
 final class _User {
@@ -94,7 +93,7 @@ Future<void> _handle(HttpRequest request) async {
   }
   if (method == 'POST' && path == ApiEndpoints.login) return _login(request);
 
-  final getSessionMatch = RegExp('^$_api/nfc-sessions/([A-Za-z0-9_-]+)\$').firstMatch(path);
+  final getSessionMatch = RegExp('^$_api/nfc/sessions/([A-Za-z0-9_-]+)\$').firstMatch(path);
   if (method == 'GET' && getSessionMatch != null) {
     final user = _authenticate(request);
     if (user == null) return _error(request, HttpStatus.unauthorized, 'Token thiếu hoặc hết hạn');
@@ -106,16 +105,14 @@ Future<void> _handle(HttpRequest request) async {
     if (session.owner.accountId != user.accountId) {
       return _error(request, HttpStatus.forbidden, 'Phiên thuộc tài khoản khác');
     }
-    if (session.used) {
-      return _error(request, HttpStatus.conflict, 'Phiên đã sử dụng');
-    }
     return _send(
       request,
       HttpStatus.ok,
       ContentType.json,
       jsonEncode({
         'sessionId': sessionId,
-        'status': 'ACTIVE',
+        // giống identity-service: phiên đã dùng vẫn đọc được, trả VERIFIED
+        'status': session.used ? 'VERIFIED' : 'PENDING',
         'expiresAt': session.expiresAt.toIso8601String(),
       }),
     );
@@ -127,16 +124,11 @@ Future<void> _handle(HttpRequest request) async {
   final user = _authenticate(request);
   if (user == null) return _error(request, HttpStatus.unauthorized, 'Token thiếu hoặc hết hạn');
   final sessionId = match.group(1)!;
-  final action = '$method ${match.group(2)}';
-
-  if (action == 'POST confirm' || action == 'DELETE card') {
-    return _error(request, HttpStatus.gone, 'Endpoint $action đã bỏ theo Software Design D-20');
-  }
-  if (action != 'POST card') {
+  if (method != 'POST') {
     return _error(request, HttpStatus.methodNotAllowed, 'Không hỗ trợ $method');
   }
   final result = await _submitCard(user, sessionId, await _readJson(request));
-  _log(sessionId, '${match.group(2)} → ${result['status']} ${result['reasonCode'] ?? ''}');
+  _log(sessionId, 'card → ${result['status']} ${result['reasonCode'] ?? ''}');
   return _send(request, HttpStatus.ok, ContentType.json, jsonEncode(result));
 }
 

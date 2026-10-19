@@ -1,3 +1,5 @@
 {
-  "API_BASE_URL": "http://192.168.1.10:8080"
+  "API_BASE_URL": "http://192.168.1.10:8080",
+  "NFC_TRANSPORT_PUBLIC_KEY": "",
+  "NFC_TRANSPORT_KEY_ID": "nfc-transport-v1"
 }

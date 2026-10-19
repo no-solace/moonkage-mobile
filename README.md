@@ -45,6 +45,8 @@ flutter run --dart-define-from-file=env/mock.json
 
 * **Tài khoản kiểm thử mẫu (Mock Account):** `demo@moonkage.vn` / Mật khẩu: `123456`.
 * **Môi trường kết nối Backend thật:** Sử dụng `env/dev.json` (kết nối qua API Gateway cổng 8080).
+  Bắt buộc điền `NFC_TRANSPORT_PUBLIC_KEY` (PEM trong chuỗi JSON, xuống dòng viết `\n`) khớp với `NFC_TRANSPORT_PRIVATE_KEY_V1` trong `.env` của platform:
+  `openssl pkey -in nfc.pem -pubout`. Thiếu khóa thì app dừng ở màn lỗi cấu hình; khóa demo chỉ dùng với mock server (`NFC_USE_DEMO_KEY`).
 
 ### Tiêu chuẩn kiểm tra trước khi commit mã nguồn
 
