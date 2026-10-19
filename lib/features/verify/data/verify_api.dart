@@ -35,7 +35,8 @@ class VerifyApi {
               message: Strings.reason(ReasonCode.sessionExpired),
             );
           }
-          if (s == 'USED' || s == 'SESSION_USED') {
+          // identity-service trả VERIFIED cho phiên đã gửi thẻ thành công
+          if (s == 'VERIFIED' || s == 'USED' || s == 'SESSION_USED') {
             throw ServerFailure(
               statusCode: 409,
               message: Strings.reason(ReasonCode.sessionUsed),

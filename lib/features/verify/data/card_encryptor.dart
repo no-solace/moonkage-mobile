@@ -18,12 +18,14 @@ final cardEncryptorProvider = Provider<CardEncryptor>((ref) => JweCardEncryptor(
 /// Mã hóa JWE compact (RSA-OAEP-256 + A256GCM) bọc {idNumber, dateOfBirth, placeOfResidence}
 /// theo Software Design D-17 và AC-04.10.
 final class JweCardEncryptor implements CardEncryptor {
-  JweCardEncryptor({String? publicKey, String? keyId})
+  JweCardEncryptor({String? publicKey, String? keyId, bool? useDemoKey})
     : _publicKey = publicKey ?? AppConfig.nfcTransportPublicKey,
-      _keyId = keyId ?? AppConfig.nfcTransportKeyId;
+      _keyId = keyId ?? AppConfig.nfcTransportKeyId,
+      _useDemoKey = useDemoKey ?? AppConfig.useDemoNfcKey;
 
   final String _publicKey;
   final String _keyId;
+  final bool _useDemoKey;
   JsonWebKey? _cachedKey;
 
   JsonWebKey _getKey() {
@@ -47,8 +49,9 @@ final class JweCardEncryptor implements CardEncryptor {
       }
       return _cachedKey = JsonWebKey.fromJson(json);
     }
-    // Dùng khóa demo khi chưa truyền biến môi trường (dev / test)
-    return _cachedKey = JsonWebKey.fromJson(demoPublicKeyJwk);
+    // Khóa demo chỉ khớp mock server; với identity-service thật phải truyền NFC_TRANSPORT_PUBLIC_KEY
+    if (_useDemoKey) return _cachedKey = JsonWebKey.fromJson(demoPublicKeyJwk);
+    throw StateError('NFC_TRANSPORT_PUBLIC_KEY chưa được cấu hình');
   }
 
   @override
