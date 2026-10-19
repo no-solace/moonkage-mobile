@@ -10,7 +10,9 @@ abstract final class Strings {
   // Cấu hình
   static const configErrorTitle = 'Lỗi cấu hình';
   static const configErrorBody =
-      'Bản build thiếu hoặc sai API_BASE_URL. Build lại với --dart-define-from-file=env/dev.json.';
+      'Bản build thiếu hoặc sai API_BASE_URL, hoặc thiếu NFC_TRANSPORT_PUBLIC_KEY '
+      '(mock server thì đặt NFC_USE_DEMO_KEY=true). '
+      'Build lại với --dart-define-from-file=env/dev.json.';
 
   // Đăng nhập
   static const loginTitle = 'Đăng nhập';
@@ -61,14 +63,14 @@ abstract final class Strings {
   static const hideIdNumber = 'Ẩn số CCCD';
   static const fieldFullName = 'Họ và tên';
   static const fieldDateOfBirth = 'Ngày sinh';
-  static const fieldSex = 'Giới tính';
+  static const fieldGender = 'Giới tính';
   static const fieldNationality = 'Quốc tịch';
   static const fieldPlaceOfBirth = 'Nơi sinh';
   static const fieldPlaceOfResidence = 'Nơi thường trú';
   static const fieldDateOfIssue = 'Ngày cấp';
   static const fieldDateOfExpiry = 'Có giá trị đến';
-  static const sexMale = 'Nam';
-  static const sexFemale = 'Nữ';
+  static const genderMale = 'Nam';
+  static const genderFemale = 'Nữ';
 
   // Kết quả
   static const resultTitle = 'Kết quả';

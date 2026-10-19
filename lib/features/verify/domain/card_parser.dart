@@ -18,7 +18,7 @@ final _isoDate = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$');
 ///
 /// ```json
 /// {"id_number":"000000000001","full_name":"NGUYEN VAN AN","date_of_birth":"1990-01-01",
-///  "sex":"Nam","nationality":"Viet Nam","place_of_birth":"Tinh Lam Dong",
+///  "gender":"Nam","nationality":"Viet Nam","place_of_birth":"Tinh Lam Dong",
 ///  "place_of_residence":"So 1 Duong ...","date_of_issue":"2024-01-01","date_of_expiry":"2030-01-01"}
 /// ```
 ///
@@ -36,7 +36,7 @@ IdentityCard? parseCardText(String text) {
   final idNumber = field('id_number');
   final fullName = field('full_name');
   final dateOfBirth = _parseDate(field('date_of_birth'));
-  final sex = _parseSex(field('sex'));
+  final gender = _parseGender(field('gender'));
   final nationality = field('nationality');
   final placeOfBirth = field('place_of_birth');
   final placeOfResidence = field('place_of_residence');
@@ -47,7 +47,7 @@ IdentityCard? parseCardText(String text) {
   if (fullName == null || !_unaccentedName.hasMatch(fullName)) return null;
   if (dateOfBirth == null || dateOfIssue == null || dateOfExpiry == null) return null;
   if (dateOfBirth.isAfter(dateOfIssue) || !dateOfIssue.isBefore(dateOfExpiry)) return null;
-  if (sex == null || nationality == null || placeOfBirth == null || placeOfResidence == null) {
+  if (gender == null || nationality == null || placeOfBirth == null || placeOfResidence == null) {
     return null;
   }
 
@@ -55,7 +55,7 @@ IdentityCard? parseCardText(String text) {
     idNumber: idNumber,
     fullName: fullName,
     dateOfBirth: dateOfBirth,
-    sex: sex,
+    gender: gender,
     nationality: nationality,
     placeOfBirth: placeOfBirth,
     placeOfResidence: placeOfResidence,
@@ -85,8 +85,8 @@ DateTime? _parseDate(String? value) {
 }
 
 /// Thẻ viết không dấu nên chấp nhận cả `Nu` lẫn `Nữ`.
-Sex? _parseSex(String? value) => switch (value) {
-  'Nam' => Sex.male,
-  'Nữ' || 'Nu' => Sex.female,
+Gender? _parseGender(String? value) => switch (value) {
+  'Nam' => Gender.male,
+  'Nữ' || 'Nu' => Gender.female,
   _ => null,
 };

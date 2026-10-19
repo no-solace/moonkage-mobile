@@ -7,9 +7,9 @@ abstract final class IdentityCardJson {
     'idNumber': card.idNumber,
     'fullName': card.fullName,
     'dateOfBirth': formatDate(card.dateOfBirth),
-    'sex': switch (card.sex) {
-      Sex.male => 'MALE',
-      Sex.female => 'FEMALE',
+    'gender': switch (card.gender) {
+      Gender.male => 'MALE',
+      Gender.female => 'FEMALE',
     },
     'nationality': card.nationality,
     'placeOfBirth': card.placeOfBirth,
@@ -23,10 +23,10 @@ abstract final class IdentityCardJson {
     idNumber: json['idNumber']! as String,
     fullName: json['fullName']! as String,
     dateOfBirth: _parseDate(json['dateOfBirth']! as String),
-    sex: switch (json['sex']! as String) {
-      'MALE' => Sex.male,
-      'FEMALE' => Sex.female,
-      final other => throw FormatException('sex không hợp lệ', other),
+    gender: switch (json['gender']! as String) {
+      'MALE' => Gender.male,
+      'FEMALE' => Gender.female,
+      final other => throw FormatException('gender không hợp lệ', other),
     },
     nationality: json['nationality']! as String,
     placeOfBirth: json['placeOfBirth']! as String,

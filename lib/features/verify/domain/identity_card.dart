@@ -1,4 +1,4 @@
-enum Sex { male, female }
+enum Gender { male, female }
 
 /// Thông tin trên thẻ Moonkage (docs/NFC_CARD_GUIDE.md mục 2). Ngày chỉ có phần ngày, lưu ở UTC.
 final class IdentityCard {
@@ -6,7 +6,7 @@ final class IdentityCard {
     required this.idNumber,
     required this.fullName,
     required this.dateOfBirth,
-    required this.sex,
+    required this.gender,
     required this.nationality,
     required this.placeOfBirth,
     required this.placeOfResidence,
@@ -20,7 +20,7 @@ final class IdentityCard {
   /// Họ tên không dấu, chữ in hoa: `NGUYEN VAN AN`.
   final String fullName;
   final DateTime dateOfBirth;
-  final Sex sex;
+  final Gender gender;
   final String nationality;
   final String placeOfBirth;
 

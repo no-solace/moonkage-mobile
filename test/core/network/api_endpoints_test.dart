@@ -16,20 +16,20 @@ void main() {
     test('nfcSession trả về đúng đường dẫn gốc của phiên', () {
       expect(
         ApiEndpoints.nfcSession(sessionId),
-        '/identity-service/api/nfc-sessions/$sessionId',
+        '/identity-service/api/nfc/sessions/$sessionId',
       );
     });
 
     test('nfcSessionCard trả về đúng endpoint nộp thẻ kèm mã hóa tham số', () {
       expect(
         ApiEndpoints.nfcSessionCard(sessionId),
-        '/identity-service/api/nfc-sessions/$sessionId/card',
+        '/identity-service/api/nfc/sessions/$sessionId/card',
       );
 
       // Mã hóa ký tự đặc biệt nếu có
       expect(
         ApiEndpoints.nfcSessionCard('session/with/slashes'),
-        '/identity-service/api/nfc-sessions/session%2Fwith%2Fslashes/card',
+        '/identity-service/api/nfc/sessions/session%2Fwith%2Fslashes/card',
       );
     });
   });

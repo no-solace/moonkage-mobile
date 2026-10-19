@@ -45,10 +45,10 @@ class _CardDetailsState extends State<CardDetails> {
       (Strings.fieldFullName, card.fullName, null),
       (Strings.fieldDateOfBirth, Strings.date(card.dateOfBirth), null),
       (
-        Strings.fieldSex,
-        switch (card.sex) {
-          Sex.male => Strings.sexMale,
-          Sex.female => Strings.sexFemale,
+        Strings.fieldGender,
+        switch (card.gender) {
+          Gender.male => Strings.genderMale,
+          Gender.female => Strings.genderFemale,
         },
         null,
       ),

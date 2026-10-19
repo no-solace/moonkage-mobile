@@ -17,9 +17,9 @@ final class SubmitCardRequest {
 
   Map<String, Object?> toJson() => {
     'fullName': card.fullName,
-    'sex': switch (card.sex) {
-      Sex.male => 'MALE',
-      Sex.female => 'FEMALE',
+    'gender': switch (card.gender) {
+      Gender.male => 'MALE',
+      Gender.female => 'FEMALE',
     },
     'nationality': card.nationality,
     'placeOfBirth': card.placeOfBirth,

@@ -78,7 +78,7 @@ void main() {
 
     expect(find.text(Strings.confirmTitle), findsOneWidget);
     expect(find.text(sampleCard.fullName), findsOneWidget);
-    expect(find.text(Strings.sexMale), findsOneWidget);
+    expect(find.text(Strings.genderMale), findsOneWidget);
     expect(find.text(sampleCard.nationality), findsOneWidget);
 
     // Mặc định che 6 số giữa: ví dụ '079 ••• ••• 890'

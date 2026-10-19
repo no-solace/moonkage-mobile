@@ -11,11 +11,11 @@ abstract final class ApiEndpoints {
   static const login = '$identityService/auth/login';
 
   // --- NFC Verification Endpoints ---
-  /// Gốc phiên NFC: `/identity-service/api/nfc-sessions/{sessionId}`
+  /// Gốc phiên NFC: `/identity-service/api/nfc/sessions/{sessionId}`
   static String nfcSession(String sessionId) =>
-      '$identityService/nfc-sessions/${Uri.encodeComponent(sessionId)}';
+      '$identityService/nfc/sessions/${Uri.encodeComponent(sessionId)}';
 
-  /// Gửi thẻ xác minh: `POST /identity-service/api/nfc-sessions/{sessionId}/card`
+  /// Gửi thẻ xác minh: `POST /identity-service/api/nfc/sessions/{sessionId}/card`
   static String nfcSessionCard(String sessionId) => '${nfcSession(sessionId)}/card';
 
   /// Trả về [Uri] tuyệt đối kết hợp với [AppConfig.apiBaseUrl] khi cần mở URL ngoài hoặc chia sẻ liên kết.

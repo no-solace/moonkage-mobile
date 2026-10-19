@@ -36,7 +36,7 @@ void main() {
       expect(card.idNumber, '000000000001');
       expect(card.fullName, 'NGUYEN VAN AN');
       expect(card.dateOfBirth, DateTime.utc(1990));
-      expect(card.sex, Sex.male);
+      expect(card.gender, Gender.male);
       expect(card.nationality, 'Viet Nam');
       expect(card.placeOfBirth, 'Tinh Lam Dong');
       expect(card.placeOfResidence, 'So 1 Duong Thu Nghiem, Phuong Sai Gon, TP Lam Dong');
@@ -45,8 +45,8 @@ void main() {
     });
 
     test('giới tính nữ viết Nu hoặc Nữ đều được', () {
-      expect(parseCardText(sampleCardText({'sex': 'Nu'}))!.sex, Sex.female);
-      expect(parseCardText(sampleCardText({'sex': 'Nữ'}))!.sex, Sex.female);
+      expect(parseCardText(sampleCardText({'gender': 'Nu'}))!.gender, Gender.female);
+      expect(parseCardText(sampleCardText({'gender': 'Nữ'}))!.gender, Gender.female);
     });
 
     test('khóa lạ bị bỏ qua; khoảng trắng đầu cuối được cắt', () {
@@ -85,7 +85,7 @@ void main() {
     });
 
     test('giới tính lạ thì trả về null', () {
-      expect(parseCardText(sampleCardText({'sex': 'M'})), isNull);
+      expect(parseCardText(sampleCardText({'gender': 'M'})), isNull);
     });
   });
 }

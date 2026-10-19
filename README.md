@@ -45,6 +45,8 @@ flutter run --dart-define-from-file=env/mock.json
 
 * **Tài khoản kiểm thử mẫu (Mock Account):** `demo@moonkage.vn` / Mật khẩu: `123456`.
 * **Môi trường kết nối Backend thật:** Sử dụng `env/dev.json` (kết nối qua API Gateway cổng 8080).
+  Bắt buộc điền `NFC_TRANSPORT_PUBLIC_KEY` (PEM viết liền trên một dòng, không có `\n`: trên Windows `flutter build` không truyền được giá trị có xuống dòng) khớp với `NFC_TRANSPORT_PRIVATE_KEY_V1` trong `.env` của platform:
+  `openssl pkey -in nfc.pem -pubout`. Thiếu khóa thì app dừng ở màn lỗi cấu hình; khóa demo chỉ dùng với mock server (`NFC_USE_DEMO_KEY`).
 
 ### Tiêu chuẩn kiểm tra trước khi commit mã nguồn
 
@@ -299,7 +301,7 @@ Dữ liệu nạp vào thẻ là một JSON object duy nhất nằm trong **NDEF
 | `id_number` | Chuỗi | Đúng 12 chữ số | `"000000000001"` |
 | `full_name` | Chuỗi | Chữ in hoa không dấu | `"NGUYEN VAN AN"` |
 | `date_of_birth` | Chuỗi | Định dạng `yyyy-MM-dd` | `"1990-01-01"` |
-| `sex` | Chuỗi | `"Nam"` hoặc `"Nu"` (hoặc `"Nữ"`) | `"Nam"` |
+| `gender` | Chuỗi | `"Nam"` hoặc `"Nu"` (hoặc `"Nữ"`) | `"Nam"` |
 | `nationality` | Chuỗi | Tên quốc gia | `"Viet Nam"` |
 | `place_of_birth` | Chuỗi | Quê quán / Nơi sinh | `"Tinh Lam Dong"` |
 | `place_of_residence` | Chuỗi | Địa chỉ thường trú | `"So 1 Duong Thu Nghiem, TP Da Lat"` |
@@ -350,7 +352,7 @@ Cài đặt ứng dụng miễn phí **NFC Tools** từ Google Play Store hoặc
   "id_number": "000000000001",
   "full_name": "NGUYEN VAN AN",
   "date_of_birth": "1990-01-01",
-  "sex": "Nam",
+  "gender": "Nam",
   "nationality": "Viet Nam",
   "place_of_birth": "Tinh Lam Dong",
   "place_of_residence": "So 1 Duong Thu Nghiem, Phuong Sai Gon, TP Lam Dong",
